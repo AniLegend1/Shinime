@@ -1,0 +1,125 @@
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle("light-mode");
+    
+    const button = document.querySelector(".toggle-theme");
+    if (body.classList.contains("light-mode")) {
+        button.textContent = "Mode Sombre";
+    } else {
+        button.textContent = "Mode Clair";
+    }
+}
+
+function filterAnimes() {
+    const searchInput = document.getElementById("search").value.toLowerCase();
+    const selectedGenre = document.getElementById("genre-filter").value.toLowerCase();
+    const animeItems = document.querySelectorAll(".anime-item");
+    
+    animeItems.forEach(item => {
+        const title = item.querySelector(".anime-title").textContent.toLowerCase();
+        const genre = item.getAttribute("data-genre").toLowerCase();
+        
+        if ((title.includes(searchInput) || searchInput === "") && (genre.includes(selectedGenre) || selectedGenre === "")) {
+            item.style.display = "block";
+        } else {
+            item.style.display = "none";
+        }
+    });
+}
+
+function showAnimeDetails(title, synopsis, genre, rating, releaseDate, videoUrl, imageUrl) {
+    window.location.href = `anime.html?title=${encodeURIComponent(title)}&synopsis=${encodeURIComponent(synopsis)}&genre=${encodeURIComponent(genre)}&rating=${encodeURIComponent(rating)}&releaseDate=${encodeURIComponent(releaseDate)}&videoUrl=${encodeURIComponent(videoUrl)}&imageUrl=${encodeURIComponent(imageUrl)}`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Mise à jour du titre du site
+    document.title = "Shinime - Streaming Anime";
+    
+    // Barre de recherche et filtre par genre
+    const searchContainer = document.createElement("div");
+    searchContainer.classList.add("search-container");
+    
+    const searchBox = document.createElement("input");
+    searchBox.setAttribute("type", "text");
+    searchBox.setAttribute("id", "search");
+    searchBox.setAttribute("placeholder", "Rechercher un anime...");
+    searchBox.addEventListener("input", filterAnimes);
+    
+    const genreFilter = document.createElement("select");
+    genreFilter.setAttribute("id", "genre-filter");
+    genreFilter.innerHTML = `
+        <option value="">Tous les genres</option>
+        <option value="action">Action</option>
+        <option value="aventure">Aventure</option>
+        <option value="comédie">Comédie</option>
+        <option value="drame">Drame</option>
+        <option value="fantasy">Fantasy</option>
+        <option value="horror">Horreur</option>
+        <option value="science-fiction">Science-fiction</option>
+    `;
+    genreFilter.addEventListener("change", filterAnimes);
+    
+    searchContainer.appendChild(searchBox);
+    searchContainer.appendChild(genreFilter);
+    
+    const main = document.querySelector("main");
+    main.insertBefore(searchContainer, main.firstChild);
+    
+    // Animation d'apparition des animes
+    const animeItems = document.querySelectorAll(".anime-item");
+    animeItems.forEach((item, index) => {
+        item.style.animationDelay = `${index * 0.2}s`;
+        item.classList.add("fade-in");
+    });
+    
+    // Effets dynamiques sur les cartes d'anime
+    animeItems.forEach(item => {
+        item.addEventListener("mouseover", () => {
+            item.style.transform = "scale(1.05)";
+            item.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.2)";
+        });
+        
+        item.addEventListener("mouseleave", () => {
+            item.style.transform = "scale(1)";
+            item.style.boxShadow = "none";
+        });
+        
+        item.addEventListener("click", () => {
+            const title = item.getAttribute("data-title");
+            const synopsis = item.getAttribute("data-synopsis");
+            const genre = item.getAttribute("data-genre");
+            const rating = item.getAttribute("data-rating");
+            const releaseDate = item.getAttribute("data-release-date");
+            const videoUrl = item.getAttribute("data-video-url");
+            const imageUrl = item.getAttribute("data-image-url");
+            showAnimeDetails(title, synopsis, genre, rating, releaseDate, videoUrl, imageUrl);
+        });
+    });
+
+    // Ajout d'un carrousel pour les animes populaires
+    const carousel = document.createElement("div");
+    carousel.classList.add("anime-carousel");
+    main.insertBefore(carousel, main.firstChild);
+    
+    // Chargement dynamique des animes en AJAX
+    fetch("animes.json")
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(anime => {
+                const animeCard = document.createElement("div");
+                animeCard.classList.add("anime-item");
+                animeCard.setAttribute("data-title", anime.title);
+                animeCard.setAttribute("data-synopsis", anime.synopsis);
+                animeCard.setAttribute("data-genre", anime.genre);
+                animeCard.setAttribute("data-rating", anime.rating);
+                animeCard.setAttribute("data-release-date", anime.releaseDate);
+                animeCard.setAttribute("data-video-url", anime.videoUrl);
+                animeCard.setAttribute("data-image-url", anime.imageUrl);
+                animeCard.innerHTML = `
+                    <img src="${anime.imageUrl}" alt="${anime.title}" class="anime-thumbnail">
+                    <h3 class="anime-title">${anime.title}</h3>
+                `;
+                main.appendChild(animeCard);
+            });
+        });
+});
